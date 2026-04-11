@@ -1,4 +1,6 @@
 import yfinance as yf
+import streamlit as st
+import pandas as pd
 
 
 SECTOR_ETFS = {
@@ -16,9 +18,34 @@ SECTOR_ETFS = {
 }
 
 
+@st.cache_data(ttl=300)
 def get_market_data_for_sectors(tickers):
-    data = yf.download(tickers, period="6mo", interval="1d", auto_adjust=True)
-    close_prices = data["Close"].dropna()
+    data = yf.download(
+        tickers,
+        period="6mo",
+        interval="1d",
+        auto_adjust=True,
+        progress=False,
+        group_by="ticker",
+        threads=False
+    )
+
+    if data.empty:
+        return pd.DataFrame()
+
+    close_frames = {}
+
+    for ticker in tickers:
+        try:
+            if ticker in data.columns.get_level_values(0):
+                close_frames[ticker] = data[ticker]["Close"]
+        except Exception:
+            pass
+
+    if not close_frames:
+        return pd.DataFrame()
+
+    close_prices = pd.DataFrame(close_frames).dropna(how="all")
     return close_prices
 
 
@@ -26,12 +53,36 @@ def rank_sectors():
     tickers = list(SECTOR_ETFS.values()) + ["SPY"]
     prices = get_market_data_for_sectors(tickers)
 
+    if prices.empty:
+        return []
+
+    if "SPY" not in prices.columns:
+        return []
+
+    spy_series = prices["SPY"].dropna()
+    if len(spy_series) < 21:
+        return []
+
+    spy_20d = spy_series.pct_change(20).dropna().iloc[-1]
+
     sector_scores = []
-    spy_20d = prices["SPY"].pct_change(20).iloc[-1]
 
     for sector_name, ticker in SECTOR_ETFS.items():
-        sector_20d = prices[ticker].pct_change(20).iloc[-1]
-        sector_5d = prices[ticker].pct_change(5).iloc[-1]
+        if ticker not in prices.columns:
+            continue
+
+        sector_series = prices[ticker].dropna()
+        if len(sector_series) < 21:
+            continue
+
+        sector_20d_series = sector_series.pct_change(20).dropna()
+        sector_5d_series = sector_series.pct_change(5).dropna()
+
+        if sector_20d_series.empty or sector_5d_series.empty:
+            continue
+
+        sector_20d = sector_20d_series.iloc[-1]
+        sector_5d = sector_5d_series.iloc[-1]
         relative_strength = sector_20d - spy_20d
 
         score = (
