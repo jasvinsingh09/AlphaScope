@@ -153,7 +153,7 @@ data = add_indicators(prices)
 model_results = train_model()
 
 bullish_probability = model_results["bullish_probability"]
-best_model_name = model_results["model_name"]
+best_model_name = model_results, _ = some_function()
 feature_importance = model_results["feature_importance"]
 
 # Forecast logic
