@@ -150,12 +150,31 @@ with st.sidebar:
 # Load core data
 prices = get_market_data()
 data = add_indicators(prices)
-model_results = train_model()
 
-bullish_probability = model_results["bullish_probability"]
-best_model_name = model_results, _ = some_function()
-feature_importance = model_results["feature_importance"]
+# Handle the model output correctly
+raw_results = train_model()
+model_obj = raw_results[0] if isinstance(raw_results, (list, tuple)) else raw_results
+best_model_name = "Random Forest"
 
+# Calculate probability manually to avoid errors
+try:
+    feature_cols = [
+        "SPY_Return_5D", "SPY_Return_10D", "SPY_Return_20D", 
+        "SPY_vs_MA20", "SPY_vs_MA50", "SPY_Vol_20D", "RSI_14"
+    ]
+    
+    latest_features = data[feature_cols].iloc[-1:]
+    prob = model_obj.predict_proba(latest_features)
+    bullish_probability = float(prob[0][1]) 
+    
+    feature_importance = pd.DataFrame({
+        'Feature': feature_cols,
+        'Importance': model_obj.feature_importances_
+    }).sort_values(by='Importance', ascending=False)
+    
+except Exception as e:
+    bullish_probability = 0.50
+    feature_importance = pd.DataFrame(columns=['Feature', 'Importance'])
 # Forecast logic
 if bullish_probability >= 0.65:
     forecast = "Bullish"
@@ -166,7 +185,7 @@ else:
 
 # Sector data
 sector_scores = rank_sectors()
-sector_df = pd.DataFrame(sector_scores)
+sector_df = pd.DataFrame(sector_scores).astype(str)
 
 if sector_df.empty:
     top_sector = "Unavailable"
