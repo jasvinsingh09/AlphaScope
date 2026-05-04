@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="titleDesc">
+  <title id="titleDesc">AlphaScope Logo</title>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5f91ff"/>
+      <stop offset="100%" stop-color="#10d8cd"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0a1423" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" rx="48" fill="#08101f"/>
+  <g filter="url(#softShadow)">
+    <path d="M80 220 C80 140 140 88 220 88 C300 88 360 138 360 218 C360 298 298 352 220 352 C142 352 80 300 80 220 Z" fill="url(#grad)"/>
+  </g>
+  <path d="M230 100 C280 120 320 170 310 230 C300 290 250 330 192 330 C138 330 94 290 94 230 C94 172 136 127 190 114" fill="none" stroke="#ffffff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity="0.18"/>
+  <circle cx="220" cy="210" r="78" fill="rgba(255,255,255,0.08)"/>
+  <circle cx="220" cy="210" r="62" fill="#08101f"/>
+  <path d="M170 240 L215 135 L260 240" fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M180 220 L260 220" fill="none" stroke="#10d8cd" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="260" cy="220" r="16" fill="#ffffff"/>
+  <path d="M215 135 L240 180 L265 135" fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="50%" y="372" text-anchor="middle" fill="#f6f9ff" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="800" letter-spacing="1.2">AlphaScope</text>
+</svg>
