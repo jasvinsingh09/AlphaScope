@@ -1,21 +1,37 @@
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import TimeSeriesSplit
+from sklearn.preprocessing import StandardScaler
+
 from src.data_loader import get_market_data
 from src.indicators import add_indicators
 
 
 FEATURE_COLUMNS = [
     "SPY_Return_5D",
+    "SPY_Return_10D",
     "SPY_Return_20D",
+    "SPY_Return_50D",
     "SPY_vs_MA10",
+    "SPY_vs_MA20",
     "SPY_vs_MA50",
+    "SPY_vs_MA200",
+    "SPY_Vol_10D",
     "SPY_Vol_20D",
     "RSI_14",
+    "VIX_Level",
     "VIX_Change_5D",
+    "VIX_Change_20D",
+    "VIX_vs_MA20",
     "QQQ_Return_20D",
-    "IWM_Return_20D"
+    "IWM_Return_20D",
+    "QQQ_vs_SPY",
+    "IWM_vs_SPY",
+    "MA_Bullish",
+    "Price_Above_MA50",
+    "Price_Above_MA200"
 ]
 
 
@@ -26,10 +42,10 @@ def prepare_data():
     # Create future return target
     df["Future_5D_Return"] = df["SPY"].shift(-5) / df["SPY"] - 1
 
-    # 1 if SPY is higher in 5 days, 0 otherwise
+    # 1 if SPY is higher in 5 days, 0 if lower
     df["Target"] = (df["Future_5D_Return"] > 0).astype(int)
 
-    # Remove missing rows and any rows with NaN indicators
+    # Remove missing rows
     df = df.dropna()
 
     X = df[FEATURE_COLUMNS]
@@ -60,32 +76,29 @@ def evaluate_model_cv(model, X, y, n_splits=5):
 def train_model():
     df, X, y = prepare_data()
 
-    # Reserve the most recent row as a holdout for final prediction
-    latest_features = X.iloc[[-1]]
-    X_train = X.iloc[:-1]
-    y_train = y.iloc[:-1]
+    split_index = int(len(df) * 0.8)
+
+    X_train = X.iloc[:split_index]
+    X_test = X.iloc[split_index:]
+
+    y_train = y.iloc[:split_index]
+    y_test = y.iloc[split_index:]
 
     model = RandomForestClassifier(
-        n_estimators=200,
-        max_depth=6,
-        random_state=42,
-        n_jobs=-1
+        n_estimators=100,
+        max_depth=5,
+        random_state=42
     )
-
-    cv_accuracy, cv_accuracy_std, cv_roc_auc = evaluate_model_cv(model, X_train, y_train)
 
     model.fit(X_train, y_train)
+
+    predictions = model.predict(X_test)
+    accuracy = accuracy_score(y_test, predictions)
+
+    latest_features = X.iloc[[-1]]
     latest_probability = model.predict_proba(latest_features)[0][1]
 
-    if cv_roc_auc is not None:
-        print(f"Cross-validated AUC: {cv_roc_auc:.3f}")
-
-    print(
-        f"Cross-validated accuracy: {cv_accuracy:.2%} "
-        f"± {cv_accuracy_std:.2%}"
-    )
-
-    return model, cv_accuracy, latest_probability, df
+    return model, accuracy, latest_probability, df
 
 
 if __name__ == "__main__":
